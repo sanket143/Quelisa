@@ -27,33 +27,16 @@ class List
         virtual int CurrentLocation() const = 0;
         
         //Return the data of current element
-        //virtual const E& getData() const = 0;
+        virtual const E& getData(int) const = 0;
         
         //clear all the data from the List
         virtual void clear() = 0;
         
         //insert a data in the List at current location
-        virtual void insert(const E& data) = 0;
-        
-        //insert a data in the end of the List
-        //virtual void append(const E& data) = 0;
+        virtual bool insert(const E& data) = 0;
         
         //delete a data at the current Location
         virtual E remove() = 0;
-        
-        //set the current Location to the start of the List
-        //virtual void setListLocationToStart() = 0;
-        
-        //set the current Location to the end of the List
-        //virtual void setListLocationToEnd() = 0;
-        
-        //set the current Location to the element on left side
-        // of current element
-        //virtual void previousElement() = 0;
-        
-        //set the current Location to the element on left side
-        // of current element
-        //virtual void nextElement() = 0;
         
         //Set current Location to a new Location
         virtual int setToNewLocation(int location) = 0;
@@ -84,7 +67,9 @@ class arrayList: public List<E>
         {
             delete [] dataArray;    
         }
-        
+        const E& getData(int ind) const {
+            return dataArray[ind];
+        }
         // Return number of elements currently
         
         int NumberOfElements() const {
@@ -96,7 +81,6 @@ class arrayList: public List<E>
         int CurrentLocation() const {
             return currentLocation;
         }
-        
         
         // clears the array
         
@@ -110,15 +94,16 @@ class arrayList: public List<E>
         
         // insert element
         
-        void insert(const E& data){
+        bool insert(const E& data){
             // if currentSize != arraySize
             if(currentSize < arraySize){
-                cout << "Inside insert " << endl;
                 dataArray[currentSize] = data;
                 currentSize++;
+                return true;
             }
             else{
-                cout << "List limit Reached.." << endl;
+                cout << "Queue limit Reached.." << endl;
+                return false;
             }
         }
         
@@ -145,10 +130,11 @@ class arrayList: public List<E>
         void display(){
             cout << "Queue Size: " << arraySize << endl;
             cout << "Current Size: " << currentSize << endl;
-            cout << "\nElements: " << endl;
-            for(int i = 0;i<currentSize;i++){
+            cout << endl << "[ ";
+            for(int i = currentSize-1;i>-1;i--){
                 cout << dataArray[i] << " ";
             }
+            cout << "]" << endl;
         }
 };
 
@@ -165,7 +151,7 @@ class Queue
         virtual ~Queue() {}
         
         // Insert an element at the end of the queue
-        virtual void insert(const E &) = 0;
+        virtual bool insert(const E &) = 0;
         
         //Remove the first element of the queue
         virtual E remove() = 0;
@@ -176,9 +162,6 @@ class Queue
         //Return a copy of the first element
         virtual const E& FirstElement() const= 0;
         
-        // Remove all the elements from the Queue
-        // and free the occupied memory without causing
-        // memory leak
         virtual void clearQueue() = 0;
         
 };    
@@ -207,10 +190,10 @@ class QueueArrayList:  public Queue<E>
         }
         
         // Insertion
-        void insert(const E &input){
+        bool insert(const E &input){
         
             lastElement = QueueArray->NumberOfElements();
-            QueueArray->insert(input);
+            return QueueArray->insert(input);
         }
         E remove(){
             E removed = QueueArray->remove();
@@ -222,7 +205,7 @@ class QueueArrayList:  public Queue<E>
             return QueueArray->NumberOfElements();
         }
         const E& FirstElement() const {
-            return firstElement;
+            return QueueArray->getData(firstElement);
         }
         void clearQueue(){
             QueueArray->clear();
@@ -233,42 +216,33 @@ class QueueArrayList:  public Queue<E>
         }
 };
 
-struct node{
-    char letter;
-    node* next;
-    
-    node(){
-        letter = '\0';
-        next = NULL;
-    }
-};
 
 /*
 // Whenever a command is added,
 // Increment number_of_commands.
 */
 
-const int number_of_commands = 5;
+const int number_of_commands = 6;
 
-const string commands[number_of_commands] = { "del", "add", "push", "disp", "exit"};
+const string commands[number_of_commands] = { "del", "add", "first", "clear", "disp", "exit"};
+
 void command_info(string about){
     map <string, string> command_info;
 
     command_info.insert(pair <string, string> ("del", "Deletes current Element"));
-    command_info.insert(pair <string, string> ("add", "[-operand] adds Element in the Queue"));
+    command_info.insert(pair <string, string> ("add", "Use `add [-operand]` `add 1` to add Element in Queue"));
     command_info.insert(pair <string, string> ("disp", "Displays Information" ));
-    command_info.insert(pair <string, string> ("exit", "Exits the program"));
     
+    command_info.insert(pair <string, string> ("first", "Get First Element of the Queue" ));
+    command_info.insert(pair <string, string> ("clear" , "Clears the Queue" ));
+    command_info.insert(pair <string, string> ("exit", "Exits the program"));
     map <string, string> :: iterator itr;
     if(about == ""){
-        cout << "hate" << endl;
         for(itr = command_info.begin(); itr != command_info.end(); itr++){
             cout << "\t" << itr->first << " - " << itr->second << endl;
         }
     }
     else{
-        cout << "Else" << endl;
-        cout << command_info.find(about)->first << endl;
         cout << "\t" << command_info.find(about)->first << " - " << command_info.find(about)->second << endl;
     }
 }
@@ -287,72 +261,68 @@ bool match(char *a, string b){
 	return true;
 }
 
-class command{
-    node* head;
-    node* now;
-    int size;
-    public:
-        command(){
-            head = now = new node();
-            size = 0;
-        }
-        ~command(){
-            delete head;
-            delete now;
-        }
-        void put(char ch){
-            if(size == 0){
-                now->letter = ch;
-                now = now->next;
-            }
-        }
-        void to_head(){
-             now = head;
-        }
-};
 
 int main(){
-    cout << "Quelisa 0.1.2 |Developed by Sanket Chaudhari|" << endl;
+    cout << "Quelisa 1.1.2 |Developed by Sanket Chaudhari|" << endl;
     cout << "type \"help\" to see command list." << endl;
-    string command_is, username, queue_operand, queue_operator;
-    char dummy, temp[20];
+    int size, line_no = 0, i_1;
+    string command_is, username;
+    char dummy, temp[20], ch;
     cout << "Username: "; cin >> username;
+    cout << "Enter size of Queue: "; cin >> size;
+    QueueArrayList <int> queue(size);
     scanf("%c", &dummy);
-    //cin.getline(username, 80);
-    bool space = false, start = false, end = false;
-    bool got_a_match = false;
-    int line_no = 0, i_1;
-    char ch;
+    bool space = false, start = false, end = false, got_a_match = false;
     while(true){
-        cout << username << "[" << line_no << "]>> ";       
+        cout << username << "[" << line_no << "]>> ";
+             
         space = got_a_match = false;
-        int i_0 = 0, operand = 0;
-        char input[80];
+        int i_0 = 0, queue_operand = 0;
+        char queue_operator[80], operand_char_error;
+        bool operand = false, operand_int_error = false;
+        
+        /* while loop for getting operator and operand */
         
         while((ch = getchar()) != '\n'){
+        
+            /* space variable checks whether input is operand or operator */
             if(space){
                 if(ch == ' '){
                     break;
                 }
                 int temp_0 = ch - '0';
-                cout << temp_0 << endl;
-                operand = 10*operand + temp_0;
+                if((temp_0 < 0 || temp_0 > 9) && not operand_int_error){
+                    operand_char_error = ch;
+                    operand_int_error = true;
+                }
+                queue_operand = 10*queue_operand + temp_0;
                 i_0 += 1;
+                operand = true;
+            }
+            else if(ch == ' '){
+               space = true;
+               i_0 = 0;
             }
             else{
-                input[i_0] = ch;
-                i_0 += 1;            
+                queue_operator[i_0] = ch;
+                i_0 += 1;
+                queue_operator[i_0] = '\0'; // NULL
+                
             }
             if(ch == ' '){
                 space = true;
+                
                 i_0 = 0;
             }
         }
-        input[i_0] = '\0'; // NULL 
-        
+        if(operand_int_error){
+            cout << "Please Enter an Integer. Invalid character `" << operand_char_error << "` found !" << endl;
+            continue;
+        }
+        /* Checks for opeartions and functions to call */
         if(i_0 != 0){
             for(i_1 = 0;i_1 < number_of_commands; i_1++){
-                if(match(input, commands[i_1])){
+                if(match(queue_operator, commands[i_1])){
                     got_a_match = true;
                     command_is = commands[i_1];
                     break;
@@ -361,7 +331,7 @@ int main(){
             if(command_is == "exit"){
                 break; 
             }
-            else if(match(input,"help")){
+            else if(match(queue_operator,"help")){ /* Matches the function with pre-order operand */
                 i_0 = 0;
                 cout << "Press Enter to see all commands or enter keyword.." << endl;
                 cout << "help>> ";
@@ -399,14 +369,25 @@ int main(){
                 }
             }
             else if(got_a_match){
+            /*
+            * Insert occurs only when operand is provided
+            * and have space in Queue.
+            */
                 switch(i_1){
-                    case 2:cout << "ins";break;
+                    case 0: cout << "- " << queue.remove() << endl;break;
+                    case 1: if(operand and queue.insert(queue_operand)){
+                                cout << "+ " << queue_operand << endl;
+                            }else if(!operand){
+                                cout << "Provide an operand to perform operation." << endl;
+                            };break;
+                    case 2: cout << queue.FirstElement() << endl;break;
+                    case 3: queue.clearQueue();break;
+                    case 4: queue.display();break;
                     default:break;
                 }
-                cout << endl;
             }
             else{
-                cout << "Invalid Command " << input << endl;
+                cout << "Invalid Command " << queue_operator << endl;
                 cout << "                ^" << endl;
                 cout << "Try \"help\" ! " << endl;
             }
